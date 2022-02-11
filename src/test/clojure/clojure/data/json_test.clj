@@ -15,7 +15,10 @@
   (is (= 42 (json/read-str "42")))
   (is (= -3 (json/read-str "-3")))
   (is (= 3.14159 (json/read-str "3.14159")))
-  (is (= 6.022e23 (json/read-str "6.022e23"))))
+  (is (= 6.022e23 (json/read-str "6.022e23")))
+  (is (thrown-with-msg? Exception
+        #"JSON error \(invalid number literal\)"
+        (json/read-str "123abc"))))
 
 (deftest read-bigint
   (is (= 123456789012345678901234567890N
