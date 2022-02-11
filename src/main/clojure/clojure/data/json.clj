@@ -256,7 +256,7 @@
       (int c)
       (codepoint-case (int c)
         :whitespace (recur (.read stream))
-        -1 -1))))
+        (int c)))))
 
 (defn invalid-array-exception []
   (Exception. "JSON error (invalid array)"))
