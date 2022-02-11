@@ -1,7 +1,7 @@
-(ns clojure.data.json-perf-test
+(ns insilica.data.json-perf-test
   (:require [cheshire.core :as cheshire]
             [clj-async-profiler.core :as prof]
-            [clojure.data.json :as json]
+            [insilica.data.json :as json]
             [criterium.core :refer :all]
             [jsonista.core :as jsonista]
             [clojure.string :as str])

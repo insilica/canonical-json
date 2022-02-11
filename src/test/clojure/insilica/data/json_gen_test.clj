@@ -1,5 +1,5 @@
-(ns clojure.data.json-gen-test
-  (:require [clojure.data.json :as json]
+(ns insilica.data.json-gen-test
+  (:require [insilica.data.json :as json]
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sgen]
             [clojure.spec.test.alpha :as stest]

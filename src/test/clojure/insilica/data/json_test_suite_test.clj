@@ -1,5 +1,5 @@
-(ns clojure.data.json-test-suite-test
-  (:require [clojure.data.json :as json]
+(ns insilica.data.json-test-suite-test
+  (:require [insilica.data.json :as json]
             [clojure.test :refer :all]
             [clojure.string :as str]))
 
