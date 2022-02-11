@@ -415,11 +415,7 @@
   "Reads one JSON value from input String. Options are the same as for
   read."
   [string & {:as options}]
-  (let [{:keys [eof-error? eof-value]
-         :or {eof-error? true}} options]
-    (->> options
-         (merge default-read-options)
-         (-read (PushbackReader. (StringReader. string) 64) eof-error? eof-value))))
+  (read (StringReader. string) options))
 
 ;;; JSON WRITER
 

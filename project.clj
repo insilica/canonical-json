@@ -1,6 +1,6 @@
 ;; NOTE: Used only for perf testing - this project is built with Maven (see pom.xml)
 (defproject clojure.data.json "1.1.1-SNAPSHOT"
-  :dependencies [[org.clojure/clojure "1.10.3"]]
+  :dependencies [[org.clojure/clojure "1.11.0-beta1"]]
   :source-paths ["src/main/clojure"]
   :java-source-paths ["src/main/java"]
   :java-test-paths ["src/test/java"]
