@@ -394,6 +394,11 @@
         is clojure.core/identity, use clojure.core/keyword to get
         keyword properties.
 
+     :throw-on-extra-input? boolean
+
+       If true, will throw an exception if the stream is not empty after
+       reading one item.
+
      :value-fn function
 
         Function to transform values in maps (\"objects\" in JSON) in
@@ -405,11 +410,21 @@
         value unchanged. This option does not apply to non-map
         collections."
   [reader & {:as options}]
-  (let [{:keys [eof-error? eof-value]
-         :or {eof-error? true}} options]
-    (->> options
-         (merge default-read-options)
-         (-read (PushbackReader. reader 64) eof-error? eof-value))))
+  (let [{:keys [eof-error? eof-value throw-on-extra-input?]
+         :or {eof-error? true}} options
+        reader (PushbackReader. reader 64)]
+    (as-> options $
+         (merge default-read-options $)
+         (-read reader eof-error? eof-value $)
+         (if-not throw-on-extra-input?
+           $
+           (let [c (int (next-token reader))]
+             (if (= -1 c)
+               $
+               (do
+                 (.unread reader c)
+                 (throw (ex-info "JSON error (found extra input after reading item)"
+                          {:item $})))))))))
 
 (defn read-str
   "Reads one JSON value from input String. Options are the same as for
