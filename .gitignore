@@ -1,4 +1,5 @@
 target
+.clj-kondo/
 .cpcache/
 .direnv/
 .idea/
