@@ -11,7 +11,8 @@
   See http://www.json.org/"}
   insilica.canonical-json
   (:refer-clojure :exclude (read))
-  (:require [clojure.pprint :as pprint])
+  (:require [clojure.pprint :as pprint]
+            [clojure.string :as str])
   (:import (java.io PrintWriter PushbackReader StringWriter
                     Writer StringReader EOFException)))
 
@@ -449,7 +450,10 @@
       (.append out "00")
       (< cpl 4096)
       (.append out "0"))
-    (.append out (Integer/toHexString cp))))
+    (->> cp
+         Integer/toHexString
+         str/upper-case
+         (.append out))))
 
 (def ^{:tag "[S"} codepoint-decoder
   (let [shorts (short-array 128)]
@@ -468,12 +472,38 @@
           (aset shorts i (short 0)))))
     shorts))
 
+(defn char-seq
+  "Return a seq of the characters in a string, making sure not to split up
+  UCS-2 (or is it UTF-16?) surrogate pairs. Because JavaScript. And Java.
+
+  Based on https://lambdaisland.com/blog/12-06-2017-clojure-gotchas-surrogate-pairs
+  Modified to handle lone surrogates, which are valid in JSON strings."
+  ([s]
+   (char-seq s 0))
+  ([s offset]
+   (when (< offset (count s))
+     (let [code (.charAt s offset)
+           width (if (<= 0xD800 (int code) 0xDBFF) 2 1)] ; detect "high surrogate"
+       (cons (subs s offset (min (+ offset width) (count s)))
+             (char-seq s (+ offset width)))))))
+
 (defn- write-string [^CharSequence s ^Appendable out options]
   (let [decoder codepoint-decoder]
     (.append out \")
-    (dotimes [i (.length s)]
-      (let [cp (int (.charAt s i))]
-        (if (< cp 128)
+    (doseq [ch (char-seq s)]
+      (let [cp (-> ch first .charValue int)
+            cp2 (some-> ch second .charValue int)]
+        (cond
+          ; A surrogate pair
+          (and cp2 (Character/isLowSurrogate (char cp2)))
+          (.append out ch)
+
+          ; Lone surrogate
+          (Character/isSurrogate (char cp))
+          (do (->hex-string out cp)
+              (some->> cp2 (->hex-string out)))
+
+          (< cp 128)
           (case (aget decoder cp)
             0 (.append out (char cp))
             1 (do (.append out (char (codepoint \\))) (.append out (char cp)))
@@ -484,13 +514,15 @@
             6 (.append out "\\r")
             7 (.append out "\\t")
             8 (->hex-string out cp))
+
+          :else
           (codepoint-case cp
-            :js-separators (if (get options :escape-js-separators)
-                             (->hex-string out cp)
-                             (.append out (char cp)))
-            (if (get options :escape-unicode)
-              (->hex-string out cp) ; Hexadecimal-escaped
-              (.append out (char cp)))))))
+                          :js-separators (if (get options :escape-js-separators)
+                                           (->hex-string out cp)
+                                           (.append out ch))
+                          (if (get options :escape-unicode)
+                            (->hex-string out cp) ; Hexadecimal-escaped
+                            (.append out ch))))))
     (.append out \")))
 
 (defn- write-indent [^Appendable out options]
@@ -501,6 +533,19 @@
         (.append out "  ")
         (recur (dec i))))))
 
+;; https://github.com/simon-greatrix/CanonicalJson/blob/3ac58b5b44a1d6e768d8e5d3812cf1ac93adc6a5/src/main/java/io/setl/json/CJObject.java#L104-L123
+(defn compare-by-codepoint [^String s1 ^String s2]
+  (let [lim (min (count s1) (count s2))]
+    (loop [i 0]
+      (if (<= lim i)
+        (- (count s1) (count s2))
+        (let [cp1 (int (.codePointAt s1 i))
+              cp2 (int (.codePointAt s2 i))]
+          (cond
+            (not= cp1 cp2) (- cp1 cp2)
+            (> cp1 0xffff) (recur (+ 2 i))
+            :else (recur (inc i))))))))
+
 (defn- write-object [m ^Appendable out options]
   (let [key-fn (get options :key-fn)
         value-fn (get options :value-fn)
@@ -510,11 +555,13 @@
     (.append out \{)
     (when (and indent (seq m))
       (write-indent out opts))
-    (loop [x m, have-printed-kv false]
+    (loop [x (->> m
+                  (map (fn [[k v]]
+                         [(key-fn k) (value-fn k v)]))
+                  (into (sorted-map-by compare-by-codepoint)))
+           have-printed-kv false]
       (when (seq x)
-        (let [[k v] (first x)
-              out-key (key-fn k)
-              out-value (value-fn k v)
+        (let [[out-key out-value] (first x)
               nxt (next x)]
           (when-not (string? out-key)
             (throw (Exception. "JSON object keys must be strings")))
@@ -558,8 +605,40 @@
       (write-indent out options)))
   (.append out \]))
 
-(defn- write-bignum [x ^Appendable out options]
-  (.append out (str x)))
+(def re-sci-notation #"(-?\d+)\.?(\d+)?(E\+?\-?\d+)?")
+
+(defn- format-bigdec [^BigDecimal x]
+  (let [s (str x)
+        [_ intpart decpart exp] (re-find re-sci-notation s)
+        decpart (or decpart "0")
+        neg? (str/starts-with? intpart "-")
+        expval (->> (or exp "E0") rest (apply str) parse-long)]
+    (if (some-> intpart parse-long zero?)
+      (let [[_ leading-zeroes numpart] (re-find #"(0*)(\d+)" decpart)]
+        (str (when neg? "-") (first numpart)
+             "." (if (< 1 (count numpart)) (subs numpart 1) "0")
+             "E" (- expval 1 (count leading-zeroes))))
+      (let [[new-intpart extra-intpart] (if neg?
+                                          [(subs intpart 0 2) (subs intpart 2)]
+                                          [(subs intpart 0 1) (subs intpart 1)])
+            new-exp (+ expval (count extra-intpart))]
+        (str new-intpart
+             "." (as-> (str extra-intpart decpart) $
+                   (if (zero? (count $)) "0" $))
+             "E" new-exp)))))
+
+(defn- write-bigdec [^BigDecimal x ^Appendable out options]
+  (let [bd (.stripTrailingZeros x)]
+    ;; Check int length to protect against asymmetric attack
+    ;; See https://github.com/simon-greatrix/CanonicalJson#security-addendum
+    (if-let [bigint (when (> 30 (- (.scale bd)))
+                      (try (.toBigIntegerExact bd)
+                           (catch ArithmeticException _)))]
+      (.append out (str bigint))
+      (.append out (format-bigdec bd)))))
+
+(defn- write-bigint [x ^Appendable out options]
+  (write-bigdec (BigDecimal. (biginteger x)) out options))
 
 (defn- write-float [^Float x ^Appendable out options]
   (cond (.isInfinite x)
@@ -567,7 +646,9 @@
         (.isNaN x)
         (throw (Exception. "JSON error: cannot write Float NaN"))
         :else
-        (.append out (str x))))
+        (->> (format "%.7E" x)
+            BigDecimal. .stripTrailingZeros format-bigdec
+            (.append out))))
 
 (defn- write-double [^Double x ^Appendable out options]
   (cond (.isInfinite x)
@@ -575,7 +656,9 @@
         (.isNaN x)
         (throw (Exception. "JSON error: cannot write Double NaN"))
         :else
-        (.append out (str x))))
+        (->> (format "%.16E" x)
+             BigDecimal. .stripTrailingZeros format-bigdec
+             (.append out))))
 
 (defn- write-plain [x ^Appendable out options]
   (.append out (str x)))
@@ -627,15 +710,15 @@
 (extend java.lang.Float        JSONWriter {:-write write-float})
 (extend java.lang.Double       JSONWriter {:-write write-double})
 (extend clojure.lang.Ratio     JSONWriter {:-write write-ratio})
-(extend java.math.BigInteger   JSONWriter {:-write write-bignum})
-(extend java.math.BigDecimal   JSONWriter {:-write write-bignum})
+(extend java.math.BigInteger   JSONWriter {:-write write-bigint})
+(extend java.math.BigDecimal   JSONWriter {:-write write-bigdec})
 (extend java.util.concurrent.atomic.AtomicInteger JSONWriter {:-write write-plain})
 (extend java.util.concurrent.atomic.AtomicLong    JSONWriter {:-write write-plain})
 (extend java.util.UUID         JSONWriter {:-write write-uuid})
 (extend java.time.Instant      JSONWriter {:-write write-instant})
 (extend java.util.Date         JSONWriter {:-write write-date})
 (extend java.sql.Date          JSONWriter {:-write write-sql-date})
-(extend clojure.lang.BigInt    JSONWriter {:-write write-bignum})
+(extend clojure.lang.BigInt    JSONWriter {:-write write-bigint})
 
 ;; Symbols, Keywords, and Strings
 (extend clojure.lang.Named     JSONWriter {:-write write-named})

@@ -40,7 +40,7 @@
   (is (= 3.14159M (json/read-str "3.14159" :bigdec true))))
 
 (deftest write-bigdec
-  (is (= "3.14159" (json/write-str 3.14159M))))
+  (is (= "3.14159E0" (json/write-str 3.14159M))))
 
 (deftest read-null
   (is (= nil (json/read-str "null"))))
@@ -64,9 +64,7 @@
 
 (deftest unicode-outside-bmp
   (is (= "\"smiling face: \uD83D\uDE03\""
-         (json/write-str "smiling face: \uD83D\uDE03" :escape-unicode false)))
-  (is (= "\"smiling face: \\ud83d\\ude03\""
-         (json/write-str "smiling face: \uD83D\uDE03" :escape-unicode true))))
+         (json/write-str "smiling face: \uD83D\uDE03"))))
 
 (deftest escaped-whitespace
   (is (= "foo\nbar" (json/read-str "\"foo\\nbar\"")))
@@ -253,11 +251,6 @@
 (deftest print-unicode
   (is (= "\"\\u1234\\u4567\"" (json/write-str "\u1234\u4567"))))
 
-(deftest print-nonescaped-unicode
-  (is (= "\"\\u0000\\t\\u001f \"" (json/write-str "\u0000\u0009\u001f\u0020" :escape-unicode true)))
-  (is (= "\"\\u0000\\t\\u001f \"" (json/write-str "\u0000\u0009\u001f\u0020" :escape-unicode false)))
-  (is (= "\"\u1234\u4567\"" (json/write-str "\u1234\u4567" :escape-unicode false))))
-
 (deftest escape-special-separators
   (is (= "\"\\u2028\\u2029\"" (json/write-str "\u2028\u2029" :escape-unicode false)))
   (is (= "\"\u2028\u2029\"" (json/write-str "\u2028\u2029" :escape-js-separators false))))
@@ -266,7 +259,7 @@
   (is (= "null" (json/write-str nil))))
 
 (deftest print-ratios-as-doubles
-  (is (= "0.75" (json/write-str 3/4))))
+  (is (= "7.5E-1" (json/write-str 3/4))))
 
 (deftest print-bigints
   (is (= "12345678901234567890" (json/write-str 12345678901234567890))))
@@ -382,7 +375,7 @@
   (is (thrown? Exception (json/write-str {nil 1}))))
 
 (deftest characters-in-symbols-are-escaped
-  (is (= "\"foo\\u1b1b\"" (json/write-str (symbol "foo\u1b1b")))))
+  (is (= "\"foo\\u1B1B\"" (json/write-str (symbol "foo\u1b1b")))))
 
 (deftest default-throws-on-eof
   (is (thrown? java.io.EOFException (json/read-str ""))))

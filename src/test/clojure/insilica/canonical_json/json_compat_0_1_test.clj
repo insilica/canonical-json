@@ -38,9 +38,7 @@
 
 (deftest handles-unicode-outside-bmp
   (is (= "\"smiling face: \uD83D\uDE03\""
-         (json-str "smiling face: \uD83D\uDE03" :escape-unicode false)))
-  (is (= "\"smiling face: \\ud83d\\ude03\""
-         (json-str "smiling face: \uD83D\uDE03" :escape-unicode true))))
+         (json-str "smiling face: \uD83D\uDE03"))))
 
 (deftest handles-escaped-whitespace
   (is (= "foo\nbar" (read-json "\"foo\\nbar\"")))
@@ -166,7 +164,7 @@
   (is (= "null" (json-str nil))))
 
 (deftest can-print-ratios-as-doubles
-  (is (= "0.75" (json-str 3/4))))
+  (is (= "7.5E-1" (json-str 3/4))))
 
 (deftest can-print-bigints
   (is (= "12345678901234567890" (json-str 12345678901234567890))))
@@ -201,7 +199,7 @@
   (is (thrown? Exception (json-str {nil 1}))))
 
 (deftest characters-in-symbols-are-escaped
-  (is (= "\"foo\\u1b1b\"" (json-str (symbol "foo\u1b1b")))))
+  (is (= "\"foo\\u1B1B\"" (json-str (symbol "foo\u1b1b")))))
 
 (deftest default-throws-on-eof
   (is (thrown? java.io.EOFException (read-json ""))))
