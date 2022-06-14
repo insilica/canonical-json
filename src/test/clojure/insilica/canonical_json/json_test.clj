@@ -249,11 +249,7 @@
   (is (= "\"\\\"Embedded\\\" Quotes\"" (json/write-str "\"Embedded\" Quotes"))))
 
 (deftest print-unicode
-  (is (= "\"\\u1234\\u4567\"" (json/write-str "\u1234\u4567"))))
-
-(deftest escape-special-separators
-  (is (= "\"\\u2028\\u2029\"" (json/write-str "\u2028\u2029" :escape-unicode false)))
-  (is (= "\"\u2028\u2029\"" (json/write-str "\u2028\u2029" :escape-js-separators false))))
+  (is (= "\"\u1234\u4567\"" (json/write-str "\u1234\u4567"))))
 
 (deftest print-json-null
   (is (= "null" (json/write-str nil))))
@@ -374,8 +370,8 @@
 (deftest error-on-nil-keys
   (is (thrown? Exception (json/write-str {nil 1}))))
 
-(deftest characters-in-symbols-are-escaped
-  (is (= "\"foo\\u1B1B\"" (json/write-str (symbol "foo\u1b1b")))))
+(deftest unicode-characters-in-symbols
+  (is (= "\"foo\u1B1B\"" (json/write-str (symbol "foo\u1b1b")))))
 
 (deftest default-throws-on-eof
   (is (thrown? java.io.EOFException (json/read-str ""))))
@@ -443,7 +439,7 @@
 (deftest pretty-print-nonescaped-unicode
   (is (= "\"\u1234\u4567\"\n"
          (with-out-str
-           (json/pprint "\u1234\u4567" :escape-unicode false)))))
+           (json/pprint "\u1234\u4567")))))
 
 (defn benchmark []
   (dotimes [_ 8]

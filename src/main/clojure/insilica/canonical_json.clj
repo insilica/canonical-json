@@ -507,7 +507,7 @@
           (case (aget decoder cp)
             0 (.append out (char cp))
             1 (do (.append out (char (codepoint \\))) (.append out (char cp)))
-            2 (.append out (if (get options :escape-slash) "\\/" "/"))
+            2 (.append out "/")
             3 (.append out "\\b")
             4 (.append out "\\f")
             5 (.append out "\\n")
@@ -516,13 +516,7 @@
             8 (->hex-string out cp))
 
           :else
-          (codepoint-case cp
-                          :js-separators (if (get options :escape-js-separators)
-                                           (->hex-string out cp)
-                                           (.append out ch))
-                          (if (get options :escape-unicode)
-                            (->hex-string out cp) ; Hexadecimal-escaped
-                            (.append out ch))))))
+          (.append out ch))))
     (.append out \")))
 
 (defn- write-indent [^Appendable out options]
@@ -731,10 +725,7 @@
 ;; Maybe a Java array, otherwise fail
 (extend java.lang.Object       JSONWriter {:-write write-generic})
 
-(def default-write-options {:escape-unicode true
-                            :escape-js-separators true
-                            :escape-slash true
-                            :sql-date-converter default-sql-date->instant-fn
+(def default-write-options {:sql-date-converter default-sql-date->instant-fn
                             :date-formatter java.time.format.DateTimeFormatter/ISO_INSTANT
                             :key-fn default-write-key-fn
                             :value-fn default-value-fn
@@ -743,21 +734,6 @@
 (defn write
   "Write JSON-formatted output to a java.io.Writer. Options are
    key-value pairs, valid options are:
-
-    :escape-unicode boolean
-
-       If true (default) non-ASCII characters are escaped as \\uXXXX
-
-    :escape-js-separators boolean
-
-       If true (default) the Unicode characters U+2028 and U+2029 will
-       be escaped as \\u2028 and \\u2029 even if :escape-unicode is
-       false. (These two characters are valid in pure JSON but are not
-       valid in JavaScript strings.)
-
-    :escape-slash boolean
-
-       If true (default) the slash / is escaped as \\/
 
     :sql-date-converter function
 
