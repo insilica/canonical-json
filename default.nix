@@ -10,6 +10,7 @@ let
 in with pkgs;
 mkShell {
   buildInputs = [
+    babashka
     (clojure.override { jdk = jdk; })
     glibcLocales # rlwrap (used by clj) needs this
     leiningen

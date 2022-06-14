@@ -1,0 +1,3 @@
+[submodule "canonicaljson-spec"]
+	path = canonicaljson-spec
+	url = https://github.com/insilica/canonicaljson-spec
