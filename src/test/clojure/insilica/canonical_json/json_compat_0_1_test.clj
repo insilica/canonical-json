@@ -5,10 +5,10 @@
 ;; by the terms of this license. You must not remove this notice, or
 ;; any other, from this software.
 
-(ns insilica.data.json-compat-0-1-test
+(ns insilica.canonical-json.json-compat-0-1-test
   "Compatibility tests for the 0.1.x data.json API."
   (:use clojure.test
-        [insilica.data.json :only (read-json json-str pprint-json)]))
+        [insilica.canonical-json :only (read-json json-str pprint-json)]))
 
 (deftest can-read-from-pushback-reader
   (let [s (java.io.PushbackReader. (java.io.StringReader. "42"))]
