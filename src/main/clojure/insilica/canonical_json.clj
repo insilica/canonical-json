@@ -367,7 +367,7 @@
           (throw (Exception.
                   (str "JSON error (unexpected character): " (char c))))))))
 
-(def default-read-options {:bigdec false
+(def default-read-options {:bigdec true
                            :key-fn nil
                            :value-fn nil})
 (defn read

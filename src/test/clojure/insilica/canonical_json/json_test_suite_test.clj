@@ -1,29 +1,29 @@
 (ns insilica.canonical-json.json-test-suite-test
   (:require [insilica.canonical-json :as json]
-            [clojure.test :refer :all]
-            [clojure.string :as str]))
+            [clojure.test :refer :all]))
 
 (deftest i-number-double-huge-neg-exp-test
-  (is (= [0.0] (json/read-str "[123.456e-789]"))))
+  (is (= [1.23456E-787M] (json/read-str "[123.456e-789]"))))
 
 (deftest i-number-huge-exp-test
   (is (= [##Inf]
-         (json/read-str "[0.4e00669999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999969999999006]"))))
+         (json/read-str "[0.4e00669999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999969999999006]"
+                        :bigdec false))))
 
 (deftest i-number-neg-int-huge-exp-test
-  (is (= [##-Inf] (json/read-str "[-1e+9999]"))))
+  (is (= [##-Inf] (json/read-str "[-1e+9999]" :bigdec false))))
 
 (deftest i-number-pos-double-huge-exp-test
-  (is (= [##Inf] (json/read-str "[1.5e+9999]"))))
+  (is (= [##Inf] (json/read-str "[1.5e+9999]" :bigdec false))))
 
 (deftest i-number-real-neg-overflow-test
-  (is (= [##-Inf] (json/read-str "[-123123e100000]"))))
+  (is (= [##-Inf] (json/read-str "[-123123e100000]" :bigdec false))))
 
 (deftest i-number-real-pos-overflow-test
-  (is (= [##Inf] (json/read-str "[123123e100000]"))))
+  (is (= [##Inf] (json/read-str "[123123e100000]" :bigdec false))))
 
 (deftest i-number-real-underflow-test
-  (is (= [0.0] (json/read-str "[123e-10000000]"))))
+  (is (= [0.0] (json/read-str "[123e-10000000]" :bigdec false))))
 
 (deftest i-number-too-big-neg-int-test
   (is (= [-123123123123123123123123123123N]
@@ -319,20 +319,20 @@
   (is (= [2] (json/read-str "[2] "))))
 
 (deftest y-number-0e+1-test
-  (is (= [0.0] (json/read-str "[0e+1]"))))
+  (is (= [0.0M] (json/read-str "[0e+1]"))))
 
 (deftest y-number-0e1-test
-  (is (= [0.0] (json/read-str "[0e1]"))))
+  (is (= [0.0M] (json/read-str "[0e1]"))))
 
 (deftest y-number-after-space-test
   (is (= [4] (json/read-str "[ 4]"))))
 
 (deftest y-number-double-close-to-zero-test
-  (is (= [-1.0E-78]
+  (is (= [-1.0E-78M]
          (json/read-str "[-0.000000000000000000000000000000000000000000000000000000000000000000000000000001]"))))
 
 (deftest y-number-int-with-exp-test
-  (is (= [200.0] (json/read-str "[20e1]"))))
+  (is (= [200.0M] (json/read-str "[20e1]"))))
 
 (deftest y-number-minus-zero-test
   (is (= [0] (json/read-str "[-0]"))))
@@ -347,37 +347,37 @@
   (is (= [0] (json/read-str "[-0]"))))
 
 (deftest y-number-real-capital-e-neg-exp-test
-  (is (= [0.01] (json/read-str "[1E-2]"))))
+  (is (= [0.01M] (json/read-str "[1E-2]"))))
 
 (deftest y-number-real-capital-e-pos-exp-test
-  (is (= [100.0] (json/read-str "[1E+2]"))))
+  (is (= [100.0M] (json/read-str "[1E+2]"))))
 
 (deftest y-number-real-capital-e-test
-  (is (= [1.0E22] (json/read-str "[1E22]"))))
+  (is (= [1.0E22M] (json/read-str "[1E22]"))))
 
 (deftest y-number-real-exponent-test
-  (is (= [1.23E47] (json/read-str "[123e45]"))))
+  (is (= [1.23E47M] (json/read-str "[123e45]"))))
 
 (deftest y-number-real-fraction-exponent-test
-  (is (= [1.23456E80] (json/read-str "[123.456e78]"))))
+  (is (= [1.23456E80M] (json/read-str "[123.456e78]"))))
 
 (deftest y-number-real-neg-exp-test
-  (is (= [0.01] (json/read-str "[1e-2]"))))
+  (is (= [0.01M] (json/read-str "[1e-2]"))))
 
 (deftest y-number-real-pos-exponent-test
-  (is (= [100.0] (json/read-str "[1e+2]"))))
+  (is (= [100.0M] (json/read-str "[1e+2]"))))
 
 (deftest y-number-simple-int-test
   (is (= [123] (json/read-str "[123]"))))
 
 (deftest y-number-simple-real-test
-  (is (= [123.456789] (json/read-str "[123.456789]"))))
+  (is (= [123.456789M] (json/read-str "[123.456789]"))))
 
 (deftest y-number-test
-  (is (= [1.23E67] (json/read-str "[123e65]"))))
+  (is (= [1.23E67M] (json/read-str "[123e65]"))))
 
 (deftest y-object-extreme-numbers-test
-  (is (= {"min" -1.0E28, "max" 1.0E28}
+  (is (= {"min" -1.0E28M, "max" 1.0E28M}
          (json/read-str "{\"min\": -1.0e+28, \"max\": 1.0e+28}"))))
 
 (deftest y-string-in-array-test

@@ -27,7 +27,7 @@
   :args (s/cat :json ::json-value)
   :ret string?
   :fn #(= (->> % :args :json (s/unform ::json-value))
-          (json/read-str (-> % :ret))))
+          (json/read-str (-> % :ret) :bigdec false)))
 
 (deftest roundtrip
   (let [results (stest/check `json/write-str)]

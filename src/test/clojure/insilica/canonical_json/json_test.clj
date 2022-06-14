@@ -14,8 +14,8 @@
 (deftest read-numbers
   (is (= 42 (json/read-str "42")))
   (is (= -3 (json/read-str "-3")))
-  (is (= 3.14159 (json/read-str "3.14159")))
-  (is (= 6.022e23 (json/read-str "6.022e23")))
+  (is (= 3.14159M (json/read-str "3.14159")))
+  (is (= 6.022e23M (json/read-str "6.022e23")))
   (is (thrown-with-msg? Exception
         #"JSON error \(invalid number literal\)"
         (json/read-str "123abc"))))
@@ -109,12 +109,12 @@
         (json/read-str "{} {}" :throw-on-extra-input? true))))
 
 (deftest read-nested-structures
-  (is (= {:a [1 2 {:b [3 "four"]} 5.5]}
+  (is (= {:a [1 2 {:b [3 "four"]} 5.5M]}
          (json/read-str "{\"a\":[1,2,{\"b\":[3,\"four\"]},5.5]}"
                         :key-fn keyword))))
 
 (deftest read-nested-structures-stream
-  (is (= {:a [1 2 {:b [3 "four"]} 5.5]}
+  (is (= {:a [1 2 {:b [3 "four"]} 5.5M]}
          (json/read (java.io.StringReader. "{\"a\":[1,2,{\"b\":[3,\"four\"]},5.5]}")
                     :key-fn keyword))))
 
@@ -141,11 +141,11 @@
   (is (thrown? Exception (json/read-str "{\"a\":1,,\"b\":2}"))))
 
 (deftest get-string-keys
-  (is (= {"a" [1 2 {"b" [3 "four"]} 5.5]}
+  (is (= {"a" [1 2 {"b" [3 "four"]} 5.5M]}
          (json/read-str "{\"a\":[1,2,{\"b\":[3,\"four\"]},5.5]}"))))
 
 (deftest keywordize-keys
-  (is (= {:a [1 2 {:b [3 "four"]} 5.5]}
+  (is (= {:a [1 2 {:b [3 "four"]} 5.5M]}
          (json/read-str "{\"a\":[1,2,{\"b\":[3,\"four\"]},5.5]}"
                     :key-fn keyword))))
 
@@ -433,8 +433,8 @@
 ;;; Pretty-printer
 
 (deftest pretty-printing
-  (let [x (json/read-str pass1-string)]
-    (is (= x (json/read-str (with-out-str (json/pprint x)))))))
+  (let [x (json/read-str pass1-string :bigdec false)]
+    (is (= x (json/read-str (with-out-str (json/pprint x)) :bigdec false)))))
 
 (deftest pretty-print-nonescaped-unicode
   (is (= "\"\u1234\u4567\"\n"
