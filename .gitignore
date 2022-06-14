@@ -2,6 +2,7 @@ target
 .cpcache/
 .direnv/
 .idea/
+.lsp/
 *.iml
 .lein*
 .nrepl*
