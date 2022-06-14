@@ -3,12 +3,14 @@
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sgen]
             [clojure.spec.test.alpha :as stest]
-            [clojure.test :refer :all]))
+            [clojure.test :refer :all])
+  (:import (java.math BigDecimal)))
 
 (s/def ::json-number
   (s/with-gen
-    number?
-    #(sgen/one-of [(sgen/large-integer) (sgen/double* {:infinite? false :NaN? false})])))
+    decimal?
+    #(sgen/fmap (fn [a] (BigDecimal/valueOf a))
+                (sgen/double* {:infinite? false :NaN? false}))))
 
 (s/def ::json-scalar (s/or :boolean boolean?
                            :number ::json-number
@@ -27,7 +29,7 @@
   :args (s/cat :json ::json-value)
   :ret string?
   :fn #(= (->> % :args :json (s/unform ::json-value))
-          (json/read-str (-> % :ret) :bigdec false)))
+          (json/read-str (-> % :ret))))
 
 (deftest roundtrip
   (let [results (stest/check `json/write-str)]

@@ -117,18 +117,12 @@
             (recur (unchecked-inc-int i))))))))
 
 (defn- read-integer [^String string]
-  (if (< (count string) 18)  ; definitely fits in a Long
-    (Long/valueOf string)
-    (or (try (Long/valueOf string)
-             (catch NumberFormatException e nil))
-        (bigint string))))
+  (.stripTrailingZeros (bigdec string)))
 
-(defn- read-decimal [^String string bigdec?]
-  (if bigdec?
-    (bigdec string)
-    (Double/valueOf string)))
+(defn- read-decimal [^String string]
+  (.stripTrailingZeros (bigdec string)))
 
-(defn- read-number [^PushbackReader stream bigdec?]
+(defn- read-number [^PushbackReader stream]
   (let [buffer (StringBuilder.)
         decimal? (loop [stage :minus]
                    (let [c (.read stream)]
@@ -248,7 +242,7 @@
                              true)
                          (throw (Exception. "JSON error (invalid number literal)"))))))]
     (if decimal?
-      (read-decimal (str buffer) bigdec?)
+      (read-decimal (str buffer))
       (read-integer (str buffer)))))
 
 (defn- next-token [^PushbackReader stream]
@@ -327,7 +321,7 @@
         ;; Read numbers
         (\- \0 \1 \2 \3 \4 \5 \6 \7 \8 \9)
         (do (.unread stream c)
-            (read-number stream (:bigdec options)))
+            (read-number stream))
 
         ;; Read strings
         \" (read-quoted-string stream)
@@ -367,8 +361,7 @@
           (throw (Exception.
                   (str "JSON error (unexpected character): " (char c))))))))
 
-(def default-read-options {:bigdec true
-                           :key-fn nil
+(def default-read-options {:key-fn nil
                            :value-fn nil})
 (defn read
   "Reads a single item of JSON data from a java.io.Reader. Options are
@@ -382,11 +375,6 @@
 
         Object to return if the stream is empty and eof-error? is
         false. Default is nil.
-
-     :bigdec boolean
-
-        If true use BigDecimal for decimal numbers instead of Double.
-        Default is false.
 
      :key-fn function
 

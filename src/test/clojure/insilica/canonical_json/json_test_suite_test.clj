@@ -5,35 +5,30 @@
 (deftest i-number-double-huge-neg-exp-test
   (is (= [1.23456E-787M] (json/read-str "[123.456e-789]"))))
 
-(deftest i-number-huge-exp-test
-  (is (= [##Inf]
-         (json/read-str "[0.4e00669999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999969999999006]"
-                        :bigdec false))))
-
 (deftest i-number-neg-int-huge-exp-test
-  (is (= [##-Inf] (json/read-str "[-1e+9999]" :bigdec false))))
+  (is (= [-1E9999M] (json/read-str "[-1e+9999]"))))
 
 (deftest i-number-pos-double-huge-exp-test
-  (is (= [##Inf] (json/read-str "[1.5e+9999]" :bigdec false))))
+  (is (= [1.5E9999M] (json/read-str "[1.5e+9999]"))))
 
-(deftest i-number-real-neg-overflow-test
-  (is (= [##-Inf] (json/read-str "[-123123e100000]" :bigdec false))))
+(deftest i-number-real-neg-test
+  (is (= [-1.23123E+100005M] (json/read-str "[-123123e100000]"))))
 
-(deftest i-number-real-pos-overflow-test
-  (is (= [##Inf] (json/read-str "[123123e100000]" :bigdec false))))
+(deftest i-number-real-pos-test
+  (is (= [1.23123E+100005M] (json/read-str "[123123e100000]"))))
 
 (deftest i-number-real-underflow-test
-  (is (= [0.0] (json/read-str "[123e-10000000]" :bigdec false))))
+  (is (= [1.23E-9999998M] (json/read-str "[123e-10000000]"))))
 
 (deftest i-number-too-big-neg-int-test
-  (is (= [-123123123123123123123123123123N]
+  (is (= [-123123123123123123123123123123M]
          (json/read-str "[-123123123123123123123123123123]"))))
 
 (deftest i-number-too-big-pos-int-test
-  (is (= [100000000000000000000N] (json/read-str "[100000000000000000000]"))))
+  (is (= [1E+20M] (json/read-str "[100000000000000000000]"))))
 
 (deftest i-number-very-big-negative-int-test
-  (is (= [-237462374673276894279832749832423479823246327846N]
+  (is (= [-237462374673276894279832749832423479823246327846M]
          (json/read-str "[-237462374673276894279832749832423479823246327846]"))))
 
 (deftest n-array-1-true-without-comma-test
@@ -301,22 +296,22 @@
   (is (= [false] (json/read-str "[false]"))))
 
 (deftest y-array-heterogeneous-test
-  (is (= [nil 1 "1" {}] (json/read-str "[null, 1, \"1\", {}]"))))
+  (is (= [nil 1M "1" {}] (json/read-str "[null, 1, \"1\", {}]"))))
 
 (deftest y-array-null-test
   (is (= [nil] (json/read-str "[null]"))))
 
 (deftest y-array-with-1-and-newline-test
-  (is (= [1] (json/read-str "[1\n]"))))
+  (is (= [1M] (json/read-str "[1\n]"))))
 
 (deftest y-array-with-leading-space-test
-  (is (= [1] (json/read-str " [1]"))))
+  (is (= [1M] (json/read-str " [1]"))))
 
 (deftest y-array-with-several-null-test
-  (is (= [1 nil nil nil 2] (json/read-str "[1,null,null,null,2]"))))
+  (is (= [1M nil nil nil 2M] (json/read-str "[1,null,null,null,2]"))))
 
 (deftest y-array-with-trailing-space-test
-  (is (= [2] (json/read-str "[2] "))))
+  (is (= [2M] (json/read-str "[2] "))))
 
 (deftest y-number-0e+1-test
   (is (= [0.0M] (json/read-str "[0e+1]"))))
@@ -325,7 +320,7 @@
   (is (= [0.0M] (json/read-str "[0e1]"))))
 
 (deftest y-number-after-space-test
-  (is (= [4] (json/read-str "[ 4]"))))
+  (is (= [4M] (json/read-str "[ 4]"))))
 
 (deftest y-number-double-close-to-zero-test
   (is (= [-1.0E-78M]
@@ -335,16 +330,16 @@
   (is (= [200.0M] (json/read-str "[20e1]"))))
 
 (deftest y-number-minus-zero-test
-  (is (= [0] (json/read-str "[-0]"))))
+  (is (= [0M] (json/read-str "[-0]"))))
 
 (deftest y-number-negative-int-test
-  (is (= [-123] (json/read-str "[-123]"))))
+  (is (= [-123M] (json/read-str "[-123]"))))
 
 (deftest y-number-negative-one-test
-  (is (= [-1] (json/read-str "[-1]"))))
+  (is (= [-1M] (json/read-str "[-1]"))))
 
 (deftest y-number-negative-zero-test
-  (is (= [0] (json/read-str "[-0]"))))
+  (is (= [0M] (json/read-str "[-0]"))))
 
 (deftest y-number-real-capital-e-neg-exp-test
   (is (= [0.01M] (json/read-str "[1E-2]"))))
@@ -368,7 +363,7 @@
   (is (= [100.0M] (json/read-str "[1e+2]"))))
 
 (deftest y-number-simple-int-test
-  (is (= [123] (json/read-str "[123]"))))
+  (is (= [123M] (json/read-str "[123]"))))
 
 (deftest y-number-simple-real-test
   (is (= [123.456789M] (json/read-str "[123.456789]"))))
