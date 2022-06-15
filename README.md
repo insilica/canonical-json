@@ -25,7 +25,9 @@ Usage
 ----------------------------------------
 
 The API is similar to clojure.data.json's, but with less options.
-See the [clojure.data.json API Documentation](https://clojure.github.io/data.json/)
+See the [clojure.data.json API Documentation](https://clojure.github.io/data.json/). The `:bigdec` option has been removed from the read functions. The
+`:escape-js-separators`, `:escape-slash`, and `:escape-unicode` options have been
+removed from the write functions.
 
 When reading in JSON data to canonicalize it, it is recommended to use the read functions from canonical-json rather than another JSON library. canonical-json uses BigDecimals to represent JSON numbers, which avoids a lot of subtle inconsistencies when round-tripping data.
 
