@@ -52,6 +52,8 @@ Change Log
   * Fork from [clojure.data.json](https://github.com/clojure/data.json)
   * Implement canonicaljson-spec output and round-tripping
 
+[3.0.0]: https://github.com/insilica/canonical-json/tree/v3.0.0
+
 Copyright and License
 ----------------------------------------
 
