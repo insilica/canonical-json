@@ -4,7 +4,7 @@
             [org.corfield.build :as bb]))
 
 (def lib 'co.insilica/canonical-json)
-(def version "3.1.0")
+(def version "3.2.0")
 (defn get-version [opts]
   (str version (when (:snapshot opts) "-SNAPSHOT")))
 
