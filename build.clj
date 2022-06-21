@@ -14,7 +14,9 @@
 
 (defn ci "Run the CI pipeline of tests (and build the JAR)." [opts]
   (-> opts
-      (assoc :lib lib :version (get-version opts))
+      (assoc :lib lib
+             :src-dirs ["src/main/clojure"]
+             :version (get-version opts))
       bb/clean
       test
       bb/clean
