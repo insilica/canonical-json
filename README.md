@@ -1,6 +1,9 @@
 canonical-json
 ========================================
 
+[![Clojars Project](https://img.shields.io/clojars/v/co.insilica/canonical-json.svg)](https://clojars.org/co.insilica/canonical-json)
+
+
 [canonicaljson-spec](https://insilica.github.io/canonicaljson-spec/)-compliant JSON parser/generator. Forked from [clojure.data.json](https://github.com/clojure/data.json).
 
 Key goals:
@@ -9,17 +12,6 @@ Key goals:
   * canonicaljson-spec was selected over the alternatives because it works for all valid JSON data
 * No external dependencies
 * Compatibility with [babashka](https://babashka.org/)
-
-
-Install
-----------------------------------------
-
-[CLI/`deps.edn`](https://clojure.org/reference/deps_and_cli) dependency information:
-```clojure
-co.insilica/canonical-json {:git/sha "f396256fa81beef63682f85dc72e9a8be6fe9bfb"
-                            :git/url "https://github.com/insilica/canonical-json"}
-```
-
 
 Usage
 ----------------------------------------
