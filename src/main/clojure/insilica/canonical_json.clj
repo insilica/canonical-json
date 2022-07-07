@@ -468,7 +468,7 @@
   Modified to handle lone surrogates, which are valid in JSON strings."
   ([s]
    (char-seq s 0))
-  ([s offset]
+  ([^String s offset]
    (when (< offset (count s))
      (let [code (.charAt s offset)
            width (if (<= 0xD800 (int code) 0xDBFF) 2 1)] ; detect "high surrogate"
@@ -478,13 +478,15 @@
 (defn- write-string [^CharSequence s ^Appendable out options]
   (let [decoder codepoint-decoder]
     (.append out \")
-    (doseq [ch (char-seq s)]
-      (let [cp (-> ch first .charValue int)
-            cp2 (some-> ch second .charValue int)]
+    (doseq [ch ^java.util.List (char-seq s)]
+      (let [[^Character ch1 ^Character ch2] ch
+            cp (-> ch1 .charValue int)
+            cp2 (some-> ch2 .charValue int)]
         (cond
           ; A surrogate pair
           (and cp2 (Character/isLowSurrogate (char cp2)))
-          (.append out ch)
+          (do (.append out (char cp))
+              (.append out (char cp2)))
 
           ; Lone surrogate
           (Character/isSurrogate (char cp))
@@ -504,7 +506,8 @@
             8 (->hex-string out cp))
 
           :else
-          (.append out ch))))
+          (do (.append out (char cp))
+              (when cp2 (.append out (char cp2)))))))
     (.append out \")))
 
 (defn- write-indent [^Appendable out options]
@@ -617,7 +620,7 @@
                       (try (.toBigIntegerExact bd)
                            (catch ArithmeticException _)))]
       (.append out (str bigint))
-      (.append out (format-bigdec bd)))))
+      (.append out ^String (format-bigdec bd)))))
 
 (defn- write-bigint [x ^Appendable out options]
   (write-bigdec (BigDecimal. (biginteger x)) out options))
@@ -628,9 +631,9 @@
         (.isNaN x)
         (throw (Exception. "JSON error: cannot write Float NaN"))
         :else
-        (->> (format "%.7E" x)
-            BigDecimal. .stripTrailingZeros format-bigdec
-            (.append out))))
+        (let [^String s (->> (format "%.7E" x)
+                             BigDecimal. .stripTrailingZeros format-bigdec)]
+          (.append out s))))
 
 (defn- write-double [^Double x ^Appendable out options]
   (cond (.isInfinite x)
@@ -638,9 +641,9 @@
         (.isNaN x)
         (throw (Exception. "JSON error: cannot write Double NaN"))
         :else
-        (->> (format "%.16E" x)
-             BigDecimal. .stripTrailingZeros format-bigdec
-             (.append out))))
+        (let [^String s (->> (format "%.16E" x)
+                             BigDecimal. .stripTrailingZeros format-bigdec)]
+          (.append out s))))
 
 (defn- write-plain [x ^Appendable out options]
   (.append out (str x)))
